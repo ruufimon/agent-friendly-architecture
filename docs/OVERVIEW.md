@@ -29,28 +29,31 @@ the build**, so a wrong move fails right away with an error that names the right
 
 ## The shape of the system
 
+```mermaid
+flowchart TD
+    subgraph features["features/ (product work goes here)"]
+        home["home/"]
+        transfer["transfer/"]
+        fraud["fraud-banner/"]
+        loan["loan-offer/"]
+    end
+
+    dune["dune/<br/>framework<br/>(no app code)"]
+    api["bank-api/<br/>shared contracts<br/>BankState, Transfer,<br/>BankHost, openapi.yaml"]
+    app["app/ wiring<br/>BankClient (the one writer)"]
+    server["host-server/<br/>Ktor server"]
+
+    features -- "may use only" --> dune
+    features -- "may use only" --> api
+    api --> dune
+    app --> dune
+    app --> api
+    app -. "loads at runtime only" .-> features
+    app -- "HTTP (BankHost)" --> server
 ```
-                ┌───────────────────────────────────────────────┐
-                │ features/            (product work goes here) │
-                │   home/  transfer/  fraud-banner/  loan-offer/│
-                └───────────┬───────────────────────────────────┘
-                            │ may use only
-               ┌────────────┴────────────┐
-               ▼                         ▼
-       ┌───────────────┐        ┌──────────────────┐
-       │ dune/         │◄───────│ bank-api/        │
-       │ framework     │        │ shared contracts │
-       │ (no app code) │        │ BankState,       │
-       └───────────────┘        │ Transfer,        │
-               ▲                │ BankHost,        │
-               │                │ openapi.yaml     │
-       ┌───────┴────────────────┴──────┐
-       │ app/   wiring                 │
-       │  BankClient (the one writer)  │       HTTP       ┌──────────────┐
-       │  loads features at runtime    │ ───────────────► │ host-server/ │
-       └───────────────────────────────┘   (BankHost)     │ Ktor server  │
-                                                          └──────────────┘
-```
+
+Solid arrows are compile-time dependencies. The dotted arrow means `app` loads features at
+runtime and never imports their classes. `host-server` is reached only over HTTP.
 
 | Module | Role | May depend on |
 |---|---|---|
