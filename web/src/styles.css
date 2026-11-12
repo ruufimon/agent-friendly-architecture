@@ -1,0 +1,204 @@
+/* ODT look, as on the workshop slides */
+:root {
+  --navy: #13139c;
+  --blue: #1b1bde;
+  --blue-soft: #5968c5;
+  --yellow: #ffc700;
+  --cream: #fff1c0;
+  --lavender: #ededfd;
+  --bg: #f9f9fe;
+  --border: #e4e4ea;
+  --muted: #525252;
+  --on-blue-muted: #cacafa;
+  --red: #d92d2b;
+  --red-soft: #fde8e8;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 16px;
+  background: var(--bg);
+  color: var(--navy);
+  font-family: 'IBM Plex Sans Thai', Tahoma, sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+p { margin: 0; }
+
+/* Let the frame and footnote lay out against <body>, not the shrink-wrapped root element. */
+app-root { display: contents; }
+
+/* Phone frame */
+.device {
+  width: 400px;
+  max-width: 100%;
+  min-height: 720px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 10px solid var(--navy);
+  border-radius: 40px;
+  overflow: hidden;
+}
+
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 20px;
+}
+
+.screen > *:not(router-outlet) { display: contents; }
+
+.screen-title { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+
+.tabs {
+  display: flex;
+  border-top: 1px solid var(--border);
+}
+.tabs a {
+  flex: 1;
+  padding: 14px 0;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 700;
+  text-decoration: none;
+}
+.tabs a.active { color: var(--blue); box-shadow: inset 0 3px 0 var(--blue); }
+
+.footnote { color: var(--muted); font-size: 13px; }
+
+/* Shared pieces */
+.label { color: var(--muted); font-size: 14px; }
+.muted { color: var(--muted); }
+
+.field-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  background: var(--lavender);
+  border-radius: 12px;
+}
+
+.amount { display: flex; flex-direction: column; gap: 4px; padding: 4px 16px; }
+.amount input {
+  font: inherit;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--navy);
+  border: none;
+  border-bottom: 2px solid var(--border);
+  padding: 4px 0;
+  width: 100%;
+  background: transparent;
+}
+.amount input:focus { outline: none; border-bottom-color: var(--blue); }
+
+.primary {
+  font: inherit;
+  font-weight: 700;
+  color: #fff;
+  background: var(--blue);
+  border: none;
+  border-radius: 999px;
+  padding: 14px 16px;
+  cursor: pointer;
+  margin-top: auto;
+}
+.primary:disabled { opacity: 0.6; cursor: default; }
+.primary:focus-visible, .link:focus-visible, .tabs a:focus-visible, .quick-actions a:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.banner {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--cream);
+  border-left: 6px solid var(--yellow);
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.problem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  background: var(--red-soft);
+  border-left: 6px solid var(--red);
+  border-radius: 12px;
+}
+.supported-path { color: var(--muted); }
+
+.empty { color: var(--muted); padding: 16px 0; }
+
+.balance-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 20px;
+  background: var(--blue);
+  border-radius: 16px;
+  color: #fff;
+}
+.balance-card .balance { font-size: 36px; font-weight: 700; }
+.muted-on-blue { color: var(--on-blue-muted); }
+
+.notice {
+  padding: 10px 14px;
+  background: var(--lavender);
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.quick-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 4px 0;
+}
+.quick-actions a { color: var(--blue); font-weight: 700; text-decoration: none; }
+.quick-actions span { color: var(--muted); }
+
+.offer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--cream);
+  border-radius: 12px;
+}
+.link {
+  align-self: flex-start;
+  font: inherit;
+  font-weight: 700;
+  color: var(--blue);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.recent { display: flex; flex-direction: column; gap: 4px; padding: 4px 16px; }
+.recent .row { display: flex; justify-content: space-between; }
+
+@media (max-width: 480px) {
+  body { padding: 0; justify-content: flex-start; }
+  .device { width: 100%; min-height: 100vh; border: none; border-radius: 0; }
+  .footnote { display: none; }
+}

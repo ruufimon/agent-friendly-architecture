@@ -1,0 +1,279 @@
+openapi: 3.1.0
+info:
+  title: Sand Bank Host API
+  version: 0.1.0
+  summary: The one typed contract between Sand Bank features and the server.
+  description: |
+    HTTP form of the `BankHost` interface in `bank-api`. Features never call the
+    server directly; they call `ctx.host<BankHost>()`, and the app's implementation
+    of BankHost calls these endpoints.
+
+    Changing this file is an architecture change (AGENTS.md, rule 5).
+
+    Amounts are whole Thai baht (THB) to match the Kotlin model. Every error
+    follows RFC 9457 Problem Details plus a `supportedPath` field that tells the
+    caller what to do instead (rule 2).
+
+    Draft: names, fields and rules are illustrative and need review before use.
+servers:
+  - url: https://api.sandbank.example/host/v1
+    description: Fictional production server
+  - url: http://localhost:8080/host/v1
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: risk
+    description: Fraud scoring for a transfer before it is confirmed
+  - name: lending
+    description: Loan eligibility and offers
+  - name: payments
+    description: Moving money
+
+paths:
+  /fraud-score:
+    post:
+      tags: [risk]
+      operationId: fraudScore
+      summary: Score a draft transfer for fraud risk
+      description: >
+        Used by the fraud-banner feature. Read-only: nothing is stored and no money
+        moves. Maps to `BankHost.fraudScore(to, amount)`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FraudScoreRequest'
+            example:
+              to: "Somsri K. ••7730"
+              amount: 25000
+      responses:
+        '200':
+          description: Risk score for this transfer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FraudScore'
+              example:
+                score: 85
+                level: HIGH
+                reasons: [AMOUNT_UNUSUAL_FOR_ACCOUNT, NEW_RECIPIENT]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /loan-eligibility:
+    get:
+      tags: [lending]
+      operationId: loanEligibility
+      summary: Check whether the signed-in customer can see a personal loan offer
+      description: >
+        Used by the loan-offer feature. The server reads the balance itself; the
+        client does not send it, so the balance has one source of truth (rule 3).
+        Maps to `BankHost.isEligibleForLoan(balance)`.
+      responses:
+        '200':
+          description: Eligibility result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanEligibility'
+              example:
+                eligible: true
+                productId: personal-loan-standard
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /transfers:
+    post:
+      tags: [payments]
+      operationId: createTransfer
+      summary: Send money from the customer's savings account
+      description: >
+        Called only by the app's BankClient when it handles a `Transfer` command.
+        Features must not call this directly; they send the command instead.
+        Maps to `BankHost.transfer(to, amount)`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+            example:
+              to: "Somsri K. ••7730"
+              amount: 25000
+      responses:
+        '201':
+          description: Transfer completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResult'
+              example:
+                transferId: trf_01JBX8Q2
+                status: COMPLETED
+                newBalance: 27300
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: The same Idempotency-Key was reused with a different request body
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: https://api.sandbank.example/problems/idempotency-conflict
+                title: Idempotency key reused
+                status: 409
+                detail: This key was already used for a different transfer.
+                supportedPath: Generate a new Idempotency-Key for each new transfer.
+        '422':
+          description: Business rule refused the transfer
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: https://api.sandbank.example/problems/insufficient-funds
+                title: Insufficient funds
+                status: 422
+                detail: Amount 60,000 is more than the balance of 52,300.
+                supportedPath: Lower the amount or choose another source account.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: >
+        Unique per transfer attempt. Retrying with the same key and body returns the
+        original result instead of sending money twice.
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 64
+
+  schemas:
+    Baht:
+      type: integer
+      format: int64
+      minimum: 1
+      description: Whole Thai baht (THB)
+
+    FraudScoreRequest:
+      type: object
+      required: [to, amount]
+      properties:
+        to:
+          type: string
+          description: Masked recipient as shown on screen
+        amount:
+          $ref: '#/components/schemas/Baht'
+
+    FraudScore:
+      type: object
+      required: [score, level]
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        level:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        reasons:
+          type: array
+          items:
+            type: string
+            enum: [AMOUNT_UNUSUAL_FOR_ACCOUNT, NEW_RECIPIENT, UNUSUAL_TIME, UNUSUAL_DEVICE]
+
+    LoanEligibility:
+      type: object
+      required: [eligible]
+      properties:
+        eligible:
+          type: boolean
+        productId:
+          type: string
+          description: Present only when eligible is true
+
+    TransferRequest:
+      type: object
+      required: [to, amount]
+      properties:
+        to:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Baht'
+
+    TransferResult:
+      type: object
+      required: [transferId, status, newBalance]
+      properties:
+        transferId:
+          type: string
+        status:
+          type: string
+          enum: [COMPLETED, PENDING_REVIEW]
+        newBalance:
+          type: integer
+          format: int64
+          description: Balance after the transfer, in whole baht
+
+    Problem:
+      type: object
+      description: RFC 9457 Problem Details with a supported path (rule 2)
+      required: [type, title, status, supportedPath]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        supportedPath:
+          type: string
+          description: What the caller should do instead
+
+  responses:
+    BadRequest:
+      description: The request is malformed
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://api.sandbank.example/problems/invalid-request
+            title: Invalid request
+            status: 400
+            detail: amount must be a whole number of baht, 1 or more.
+            supportedPath: Send amount as an integer number of baht.
+    Unauthorized:
+      description: Missing or expired token
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: https://api.sandbank.example/problems/unauthorized
+            title: Not signed in
+            status: 401
+            supportedPath: Sign in again and retry with a fresh bearer token.
