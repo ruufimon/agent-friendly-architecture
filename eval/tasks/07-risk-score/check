@@ -1,0 +1,3 @@
+screen=transfer
+phase=first
+expect='Risk score: 85'

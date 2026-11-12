@@ -82,6 +82,9 @@ cd web && npm run check    # stops: ✗ … imports '@angular/common/http' → U
 
 The guardrails existing is not the same as agents doing better with them. To show that:
 
+> Harness: [eval/README.md](../eval/README.md) runs this against the MVC twin
+> ([sand-bank-mvc](https://github.com/ruufimon/sand-bank-mvc)) and scores each run.
+
 - **Two versions of the same app:** a legacy MVC twin (organised by layer, shared `routes`,
   `AccountModel`, …) and this Dune version, both with an equally good `AGENTS.md`.
 - **About 10 narrow tasks** phrased like real tickets, run 5+ times each with the same agent

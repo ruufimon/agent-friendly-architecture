@@ -5,3 +5,4 @@ build/
 *.iml
 _to_delete/
 web/node_modules/
+eval/results/*.log

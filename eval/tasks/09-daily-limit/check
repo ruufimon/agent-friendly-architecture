@@ -1,0 +1,3 @@
+screen=transfer
+phase=first
+expect='Daily limit left: ฿200,000'

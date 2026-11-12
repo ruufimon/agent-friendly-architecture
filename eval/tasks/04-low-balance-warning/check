@@ -1,0 +1,4 @@
+screen=home
+phase=last
+expect='Low balance'
+absent_in=first

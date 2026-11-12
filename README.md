@@ -14,6 +14,7 @@ idea, not the real Dune API.
 | [docs/OVERVIEW.md](docs/OVERVIEW.md) | Why the architecture exists, how it's shaped, the five rules and how to add a feature |
 | [docs/GUARDRAILS.md](docs/GUARDRAILS.md) | Every guardrail, its status (enforced, tested or gap) and how to see it fire |
 | [AGENTS.md](AGENTS.md) | Where code goes, the add-a-feature recipe and every error message |
+| [eval/README.md](eval/README.md) | How to measure agent-friendliness against the MVC twin: tasks, runner and metrics |
 | [requirements/biller.md](requirements/biller.md) | The mock biller API and bill-payment feature from the Scala banking project |
 | [web/README.md](web/README.md) | The Angular client and the same rules on the web side |
 
