@@ -29,7 +29,7 @@ case $app in
   *)    usage ;;
 esac
 task_dir=$EVAL_DIR/tasks/$task
-[ -f "$task_dir/prompt.md" ] || { echo "No task '$task'. Tasks: $(ls "$EVAL_DIR/tasks" | tr '\n' ' ')" >&2; exit 2; }
+[ -f "$task_dir/prompt.md" ] || { echo "No task '$task'. Tasks: $(cd "$EVAL_DIR/tasks" && printf '%s ' */ | tr -d /)" >&2; exit 2; }
 [ -d "$repo/.git" ] || { echo "Not a git repo: $repo" >&2; exit 2; }
 if [ -n "$(git -C "$repo" status --porcelain)" ]; then
   echo "Note: $repo has uncommitted changes. Runs use the last commit (HEAD) only." >&2
